@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 0",
     "start": "node ./index.js",
-    "build": "cd client && npm build",
-    "start-dev": "cd client && yarn build && cd ../ && node ./index.js"
+    "build": "cd client && yarn build",
+    "start-dev": "cd client && yarn build && cd ../ && node ./index.js",
+    "postinstall": "cd client && yarn install"
   },
   "repository": {
     "type": "git",
