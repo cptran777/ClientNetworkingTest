@@ -1,4 +1,5 @@
-import React from 'react';
+import * as  React from 'react';
+// @ts-ignore non-code file import
 import logo from './logo.svg';
 import './App.css';
 
