@@ -23,12 +23,12 @@ export class Game extends Component<{}, GameComponentState> {
     const element = document.getElementById('game-window');
     element?.appendChild(renderer.domElement);
 
-    const geometry = new BoxGeometry(250, 250, 250);
+    const geometry = new BoxGeometry(100, 100, 100);
     const material = new MeshBasicMaterial({ color: 0x81d2ff });
     const cube = new Mesh(geometry, material);
     scene.add(cube);
 
-    camera.position.z = 500;
+    camera.position.z = 1000;
     this.setState({ cube, scene, camera, renderer });
     this.animate();
   }
@@ -43,6 +43,10 @@ export class Game extends Component<{}, GameComponentState> {
       cube.rotation.y += 0.01;
       renderer?.render(scene!, camera!);
     }
+  }
+
+  componentDidMount() {
+    this.init();
   }
 
   render() {
