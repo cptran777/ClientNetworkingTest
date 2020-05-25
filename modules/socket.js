@@ -14,7 +14,7 @@ function setupSocketHandler(io) {
     socket.on('SetColor', ({ color }) => {
       room.getMap().setColor(id, color);
       if (room.getMap().isValid(id)) {
-        socket.emit('StartRender', room.getMap().getAllDetails());
+        socket.emit('StartRender', { data: room.getMap().getAllDetails() });
         socket.broadcast.to(room.getId()).emit('NewPerson', { id, ...room.getMap().getDetails(id)});
       }
     });

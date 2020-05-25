@@ -2,26 +2,81 @@ import React, { Component } from 'react';
 import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
 import socketIOClient from 'socket.io-client';
 
-interface GameComponentState {
-  cube?: Mesh,
-  scene?: Scene,
-  renderer?: WebGLRenderer,
-  camera?: PerspectiveCamera,
-  socket?: SocketIOClient.Socket
+interface GameComponentState {}
+
+interface IRenderData {
+  id: string;
+  color: number;
+  x: number;
+  y: number;
 }
 
 export class Game extends Component<{}, GameComponentState> {
+  static colorOptions = [0x81d2ff, 0xf0421d, 0xfb3b2c, 0x50e81f, 0xe81fd9, 0xffc240];
+
   constructor(props: {}) {
     super(props);
     this.state = {};
-    this.cubes = [];
+    this.nodes = {};
   }
 
   cube?: Mesh;
   color?: number;
   socket?: SocketIOClient.Socket;
-  cubes: Array<Mesh>;
+  nodes: Record<string, Mesh>;
   scene?: Scene;
+  selfId?: string;
+  camera?: PerspectiveCamera;
+  renderer?: WebGLRenderer;
+
+  selectColor() {
+    return Game.colorOptions[Math.floor(Math.random() * Game.colorOptions.length)];
+  }
+
+  createNode(data: IRenderData) {
+    const { color, x, y } = data;
+    const geometry = new BoxGeometry(100, 100, 100);
+    const material = new MeshBasicMaterial({ color });
+    const cube = new Mesh(geometry, material);
+    cube.position.x = x;
+    cube.position.y = y;
+    return cube;
+  }
+
+  addNode(data: IRenderData) {
+    const cube = this.createNode(data);
+    this.nodes[data.id] = cube;
+    this.scene?.add(cube);
+  }
+
+  addSelf(data: IRenderData) {
+    const cube = this.createNode(data);
+    this.cube = cube;
+    this.scene?.add(cube);
+  }
+
+  setupSocket() {
+    const socket = socketIOClient('http://127.0.0.1:3000');
+    this.socket = socket;
+
+    let initialPosition: { x: number, y: number };
+
+    socket.on('SetIdentifier', (data: { id: string, position: typeof initialPosition }) => {
+      const { id, position } = data;
+      const color = this.selectColor();
+      this.selfId = id;
+      initialPosition = position;
+
+      socket.on('StartRender', (data: { data: Array<IRenderData> }) => {
+        const { data: nodes } = data;
+        this.addSelf({ id, color, x: initialPosition.x, y: initialPosition.y });
+        nodes.forEach(node => this.addNode(node));
+        this.animate();
+      });
+
+      socket.emit('SetColor', { color });
+    });
+  }
 
   init() {
     const scene = new Scene();
@@ -31,26 +86,16 @@ export class Game extends Component<{}, GameComponentState> {
 
     const element = document.getElementById('game-window');
     element?.appendChild(renderer.domElement);
-
-    const geometry = new BoxGeometry(100, 100, 100);
-    const color: number = 0x81d2ff;
-    const material = new MeshBasicMaterial({ color });
-    const cube = new Mesh(geometry, material);
-    cube.position.x = 50 + Math.floor(Math.random() * 400);
-    cube.position.y = 50 + Math.floor(Math.random() * 500);
-    scene.add(cube);
-
     camera.position.z = 1000;
-    this.cube = cube;
+
     this.scene = scene;
-    this.color = color;
-    this.setState({ cube, scene, camera, renderer });
-    this.animate();
+    this.camera = camera;
+    this.renderer = renderer;
   }
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
-    const { cube, scene, camera, renderer } = this.state;
+    const { cube, scene, camera, renderer } = this;
     // Note: Since react setState is asynchronous, cube may not necessarily be defined. We run this
     // check to make sure
     if (cube) {
@@ -58,33 +103,6 @@ export class Game extends Component<{}, GameComponentState> {
       cube.rotation.y += 0.01;
       renderer?.render(scene!, camera!);
     }
-  }
-
-  setInitialPosition() {
-    this.socket?.emit('ReceivePosition', { 
-      x: this.cube?.position.x, 
-      y: this.cube?.position.y
-    }, this.color);
-  }
-
-  setupSocket() {
-    const socket = socketIOClient('http://127.0.0.1:3000');
-    this.socket = socket;
-
-    this.setInitialPosition();
-    socket.on('RetryPosition', () => this.setInitialPosition());
-    socket.on('NewPerson', (data: { x: number, y: number, color: number }) => {
-      console.log('new person received');
-      const { x, y, color } = data;
-      const geometry = new BoxGeometry(100, 100, 100);
-      const material = new MeshBasicMaterial({ color });
-      const cube = new Mesh(geometry, material);
-      cube.position.x = x;
-      cube.position.y = y;
-      this.scene?.add(cube);
-    });
-
-    this.setState({ ...this.state, socket });
   }
 
   componentDidMount() {
