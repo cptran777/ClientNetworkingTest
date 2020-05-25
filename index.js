@@ -27,34 +27,9 @@ routeHandler(app);
 const http = require('http').createServer(app);
 const io = socketIO(http);
 const port = process.env.PORT || 3000;
+const setupSocketHandler = require('./modules/socket');
 
-// For now, we will only do one room
-const { Room } = require('./modules/room');
-const room = new Room();
-
-io.on('connection', (socket) => {
-  console.log('client connection');
-  socket.join(room.getId());
-
-  const id = room.addPerson();
-  socket.emit('Hello darkness my old friend', { cool: true });
-  socket.on('ReceivePosition', (position, color) => {
-    console.log('received position');
-    console.log(position, color);
-    const setIsSuccessful = room.setInitialPosition(id, { ...position, color });
-    if (!setIsSuccessful) {
-      socket.emit('RetryPosition');
-    } else {
-      console.log('Server emitting new person');
-      socket.broadcast.to(room.getId()).emit('NewPerson', room.getPosition(id));
-    }
-  });
-
-  setInterval(() => {
-    socket.emit('Interval', { test: 'interval' });
-  }, 10000);
-  socket.on('disconnect', () => console.log('goodbye darkness my old friend'));
-});
+setupSocketHandler(io);
 
 http.listen(port, () => {
   console.log('Listening on port', port);
