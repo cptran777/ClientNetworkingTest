@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
+import socketIOClient from 'socket.io-client';
 
 interface GameComponentState {
   cube?: Mesh,
   scene?: Scene,
   renderer?: WebGLRenderer,
-  camera?: PerspectiveCamera
+  camera?: PerspectiveCamera,
+  socket?: SocketIOClient.Socket
 }
 
 export class Game extends Component<{}, GameComponentState> {
@@ -45,8 +47,24 @@ export class Game extends Component<{}, GameComponentState> {
     }
   }
 
+  setupSocket() {
+    const socket = socketIOClient('http://127.0.0.1:3000');
+    socket.on('Hello darkness my old friend', (data: unknown) => {
+      console.log('we have data');
+      console.log(data);
+    });
+
+    socket.on('Interval', (data: unknown) => {
+      console.log('we have interval data');
+      console.log(data);
+    });
+
+    this.setState({ ...this.state, socket });
+  }
+
   componentDidMount() {
     this.init();
+    this.setupSocket();
   }
 
   render() {

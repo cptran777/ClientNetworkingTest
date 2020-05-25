@@ -31,6 +31,10 @@ const port = process.env.PORT || 3000;
 io.on('connection', (socket) => {
   console.log('client connection');
   socket.emit('Hello darkness my old friend', { cool: true });
+
+  setInterval(() => {
+    socket.emit('Interval', { test: 'interval' });
+  }, 10000);
   socket.on('disconnect', () => console.log('goodbye darkness my old friend'));
 });
 
