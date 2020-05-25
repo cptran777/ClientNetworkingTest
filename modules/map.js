@@ -53,7 +53,7 @@ class Map {
 
   isValid(id) {
     const details = this.getDetails(id);
-    return Map.coordinatesExist(details.x, details.y) && Map.isValidPosition(detais.x, details.y) && details.color;
+    return Map.coordinatesExist(details.x, details.y) && Map.isValidPosition(details.x, details.y) && details.color;
   }
 
   getDetails(id) {

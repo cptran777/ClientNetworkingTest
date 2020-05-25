@@ -70,9 +70,11 @@ export class Game extends Component<{}, GameComponentState> {
       socket.on('StartRender', (data: { data: Array<IRenderData> }) => {
         const { data: nodes } = data;
         this.addSelf({ id, color, x: initialPosition.x, y: initialPosition.y });
-        nodes.forEach(node => this.addNode(node));
+        nodes.forEach(node => node.id !== this.selfId && this.addNode(node));
         this.animate();
       });
+
+      socket.on('NewPerson', (data: IRenderData) => data.id !== this.selfId && this.addNode(data));
 
       socket.emit('SetColor', { color });
     });

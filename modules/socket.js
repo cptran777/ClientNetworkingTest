@@ -8,7 +8,7 @@ function setupSocketHandler(io) {
     console.log('client connection');
     socket.join(room.getId());
 
-    const { id, position } = room.addPerson();
+    const { id, position } = room.getMap().addPerson();
     socket.emit('SetIdentifier', { id, position });
 
     socket.on('SetColor', ({ color }) => {
