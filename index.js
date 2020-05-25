@@ -4,6 +4,7 @@
 const express = require('express');
 const bodyparser = require('body-parser');
 require('dotenv').config();
+const socketIO = require('socket.io');
 
 const routeHandler = require('./routes');
 
@@ -24,8 +25,15 @@ app.use(bodyparser.json());
 routeHandler(app);
 
 const http = require('http').createServer(app);
-
+const io = socketIO(http);
 const port = process.env.PORT || 3000;
+
+io.on('connection', (socket) => {
+  console.log('client connection');
+  socket.emit('Hello darkness my old friend', { cool: true });
+  socket.on('disconnect', () => console.log('goodbye darkness my old friend'));
+});
+
 http.listen(port, () => {
   console.log('Listening on port', port);
 });
