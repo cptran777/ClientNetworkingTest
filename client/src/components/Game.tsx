@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
 import socketIOClient from 'socket.io-client';
+import { EventKey, Direction, keyToDirectionMap, getAxisFromDirection, getDeltaFromDirection } from '../utils/keyboard';
 
 interface GameComponentState {}
 
@@ -13,11 +14,22 @@ interface IRenderData {
 
 export class Game extends Component<{}, GameComponentState> {
   static colorOptions = [0x81d2ff, 0xf0421d, 0xfb3b2c, 0x50e81f, 0xe81fd9, 0xffc240];
+  static height = 500;
+  static width = 600;
+  static maxX = Math.floor(Game.width / 2);
+  static minX = -(Game.maxX);
+  static maxY = Math.floor(Game.height / 2);
+  static minY = -(Game.maxY);
+
+  static isValidPosition(x: number, y: number): boolean {
+    return (x <= this.maxX && x >= this.minX) && (y <= this.maxY && y >= this.minY);
+  }
 
   constructor(props: {}) {
     super(props);
     this.state = {};
     this.nodes = {};
+    this.checkQueue = [];
   }
 
   cube?: Mesh;
@@ -28,6 +40,7 @@ export class Game extends Component<{}, GameComponentState> {
   selfId?: string;
   camera?: PerspectiveCamera;
   renderer?: WebGLRenderer;
+  checkQueue: Array<{ x: number, y: number }>;
 
   selectColor() {
     return Game.colorOptions[Math.floor(Math.random() * Game.colorOptions.length)];
@@ -55,6 +68,21 @@ export class Game extends Component<{}, GameComponentState> {
     this.scene?.add(cube);
   }
 
+  moveCube(direction: Direction) {
+    const axis = getAxisFromDirection(direction);
+    const delta = getDeltaFromDirection(direction);
+    const cube = this.cube;
+    
+    if (cube && delta) {
+      cube.position[axis] = cube.position[axis] + delta;
+      this.socket?.emit('MoveNode', { axis, direction: delta > 0 ? 'increment' : 'decrement' });
+    }
+  }
+
+  checkSelf(data: IRenderData) {
+    // Check received data from the server to ensure client is in the correct position
+  }
+
   setupSocket() {
     const socket = socketIOClient('http://127.0.0.1:3000');
     this.socket = socket;
@@ -71,10 +99,21 @@ export class Game extends Component<{}, GameComponentState> {
         const { data: nodes } = data;
         this.addSelf({ id, color, x: initialPosition.x, y: initialPosition.y });
         nodes.forEach(node => node.id !== this.selfId && this.addNode(node));
+        this.setupKeybinds();
         this.animate();
       });
 
       socket.on('NewPerson', (data: IRenderData) => data.id !== this.selfId && this.addNode(data));
+
+      socket.on('MovePerson', (data: IRenderData) => {
+        if (data.id === this.selfId) {
+          this.checkSelf(data);
+        } else {
+          const movedNode = this.nodes[data.id];
+          movedNode.position.x = data.x;
+          movedNode.position.y = data.y;
+        }
+      });
 
       socket.emit('SetColor', { color });
     });
@@ -105,6 +144,17 @@ export class Game extends Component<{}, GameComponentState> {
       cube.rotation.y += 0.01;
       renderer?.render(scene!, camera!);
     }
+  }
+
+  setupKeybinds() {
+    // Using window for now since the element keyevent listener doesn't work, probably because it's 
+    // a canvas
+    window.addEventListener('keyup', (event) => {
+      const direction = keyToDirectionMap[event.keyCode as EventKey];
+      if (direction) {
+        this.moveCube(direction);
+      }
+    });
   }
 
   componentDidMount() {

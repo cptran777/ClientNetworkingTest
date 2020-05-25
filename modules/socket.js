@@ -19,6 +19,21 @@ function setupSocketHandler(io) {
       }
     });
 
+    socket.on('MoveNode', ({ axis, direction }) => {
+      const isDecrement = direction === 'decrement';
+      let isSuccessful = false;
+
+      if (axis === 'x') {
+        isSuccessful = room.getMap().incrementX(id, isDecrement);
+      } else if (axis === 'y') {
+        isSuccessful = room.getMap().incrementY(id, isDecrement);
+      }
+
+      if (isSuccessful) {
+        socket.broadcast.to(room.getId()).emit('MovePerson', { id, ...room.getMap().getDetails(id) });
+      }
+    });
+
     socket.on('disconnect', () => console.log('Hello darkness my old friend'));
   });
 }

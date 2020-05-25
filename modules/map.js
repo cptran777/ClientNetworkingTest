@@ -64,6 +64,32 @@ class Map {
     const idKeys = Object.keys(this._map);
     return idKeys.map(key => ({ id: key, ...this._map[key] }));
   }
+
+  /**
+   * Adjusts thet x coordinate of the node in question
+   * @return whether the adjustment was accepted as valid
+   */
+  incrementX(id, isDecrement) {
+    const { x, y } = this.getDetails(id);
+    const delta = isDecrement ? -20 : 20;
+    if (Map.isValidPosition(x + delta, y)) {
+      this._setDetails(id, { x: x + delta, y });
+      return true;
+    }
+
+    return false;
+  }
+
+  incrementY(id, isDecrement) {
+    const { x, y } = this.getDetails(id);
+    const delta = isDecrement ? -20 : 20;
+    if (Map.isValidPosition(x, y + delta)) {
+      this._setDetails(id, { x, y: y + delta });
+      return true;
+    }
+
+    return false;
+  }
 }
 
 module.exports = { Map };
