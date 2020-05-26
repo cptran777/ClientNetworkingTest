@@ -89,7 +89,7 @@ export class Game extends Component<{}, GameComponentState> {
   }
 
   setupSocket() {
-    const socket = socketIOClient('http://127.0.0.1:3000');
+    const socket = socketIOClient('/');
     this.socket = socket;
 
     let initialPosition: { x: number, y: number };
