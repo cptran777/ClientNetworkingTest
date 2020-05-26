@@ -1,8 +1,8 @@
 const { v4: uuid } = require('uuid');
 
 class Map {
-  static height = 500;
-  static width = 600;
+  static height = 1000;
+  static width = 1000;
   static maxX = Math.floor(this.width / 2);
   static minX = -(this.maxX);
   static maxY = Math.floor(this.height / 2);

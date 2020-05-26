@@ -14,8 +14,8 @@ interface IRenderData {
 
 export class Game extends Component<{}, GameComponentState> {
   static colorOptions = [0x81d2ff, 0xf0421d, 0xfb3b2c, 0x50e81f, 0xe81fd9, 0xffc240];
-  static height = 500;
-  static width = 600;
+  static height = 1000;
+  static width = 1000;
   static maxX = Math.floor(Game.width / 2);
   static minX = -(Game.maxX);
   static maxY = Math.floor(Game.height / 2);
@@ -74,8 +74,13 @@ export class Game extends Component<{}, GameComponentState> {
     const cube = this.cube;
     
     if (cube && delta) {
-      cube.position[axis] = cube.position[axis] + delta;
-      this.socket?.emit('MoveNode', { axis, direction: delta > 0 ? 'increment' : 'decrement' });
+      const newX = axis === 'x' ? cube.position.x + delta : cube.position.x;
+      const newY = axis === 'y' ? cube.position.y + delta : cube.position.y;
+
+      if (Game.isValidPosition(newX, newY)) {
+        cube.position[axis] = cube.position[axis] + delta;
+        this.socket?.emit('MoveNode', { axis, direction: delta > 0 ? 'increment' : 'decrement' });
+      }
     }
   }
 

@@ -31,7 +31,7 @@ function setupSocketHandler(io) {
 
       if (isSuccessful) {
         socket.broadcast.to(room.getId()).emit('MovePerson', { id, ...room.getMap().getDetails(id) });
-      }
+      } 
     });
 
     socket.on('disconnect', () => console.log('Hello darkness my old friend'));
