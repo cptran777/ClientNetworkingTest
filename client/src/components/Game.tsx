@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
 import socketIOClient from 'socket.io-client';
 import { EventKey, Direction, keyToDirectionMap, getAxisFromDirection, getDeltaFromDirection } from '../utils/keyboard';
-import { debounce } from 'lodash';
 
 interface GameComponentState {}
 
@@ -151,8 +150,6 @@ export class Game extends Component<{}, GameComponentState> {
       renderer?.render(scene!, camera!);
     }
   }
-
-  debouncedMoveCube?: Function;
 
   setupKeybinds() {
     // Using window for now since the element keyevent listener doesn't work, probably because it's 
